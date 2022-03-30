@@ -1,31 +1,23 @@
 #!/bin/bash
 #
-# https://github.com/gayankuruppu/openvpn-install-for-multiple-users
-# This script enables duplicate-cn in server.conf. You can share the same client.ovpn file for multiple users.
-# Based on Nyr https://github.com/Nyr/openvpn-install
-#
 # checks if ubuntu is 1604
 if grep -qs "Ubuntu 16.04" "/etc/os-release"; then
 	echo 'Ubuntu 16.04 is no longer supported'
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
 	exit
 fi
 # cehcks if run in bash
 if readlink /proc/$$/exe | grep -q "dash"; then
 	echo "This script needs to be run with bash, not sh"
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
 	exit
 fi
 # checks if run in root
 if [[ "$EUID" -ne 0 ]]; then
 	echo "Run this as root"
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
 	exit
 fi
 # checks if tun device is enabled
 if [[ ! -e /dev/net/tun ]]; then
 	echo "The TUN device is not enabled"
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
 	exit
 fi
 
@@ -38,7 +30,6 @@ elif [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
 	GROUPNAME=nobody
 else
 	echo "This script only works on Debian, Ubuntu or CentOS"
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
 	exit
 fi
 
@@ -55,7 +46,7 @@ newclient () {
 	cat /etc/afatcpopenvpn/server/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
 	echo "</key>" >> ~/$1.ovpn
 	echo "<tls-auth>" >> ~/$1.ovpn
-	sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/afatcpopenvpn/server/afatcpta.key >> ~/$1.ovpn
+	sed -ne '/BEGIN afatcpOpenVPN Static key/,$ p' /etc/afatcpopenvpn/server/afatcpta.key >> ~/$1.ovpn
 	echo "</tls-auth>" >> ~/$1.ovpn
 }
 
@@ -65,12 +56,10 @@ if [[ -e /etc/afatcpopenvpn/server/afatcpserver.conf ]]; then
 		echo "Still you can't connect multiple users to the OpenVPN server?"
 		echo "Restart the server!"
 		echo
-		echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
-		exit
+			exit
 else
 	clear
-	echo 'Install OpenVPN for Multiple Users'
-	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
+	echo 'Install afatcpOpenVPN for Multiple Users'
 	echo
 	# OpenVPN setup and first user creation
 	echo "Listening to IPv4 Address."
@@ -260,10 +249,10 @@ WantedBy=multi-user.target" > /etc/systemd/system/afatcpopenvpn-iptables.service
 				yum install policycoreutils-python-utils -y
 			fi
 		fi
-		semanage port -a -t openvpn_port_t -p $PROTOCOL $PORT
+		semanage port -a -t afatcpopenvpn_port_t -p $PROTOCOL $PORT
 	fi
 	# And finally, enable and start the OpenVPN service
-	systemctl enable --now openvpn-server@afatcpserver.service
+	systemctl enable --now afatcpopenvpn-server@afatcpserver.service
 	# If the server is behind a NAT, use the correct IP address
 	if [[ "$PUBLICIP" != "" ]]; then
 		IP=$PUBLICIP
@@ -289,8 +278,7 @@ verb 3" > /etc/afatcpopenvpn/server/afatcpclient-common.txt
 	newclient "$CLIENT"
 	echo
 	echo "Completed!"
- 	echo "Go to https://github.com/gayankuruppu/openvpn-install-for-multiple-users for FAQ"
-	echo
+ 	echo
 	echo "duplicate-cn is added to the server.conf"
 	echo
 	echo "Now you can share the client certificate with unlimited number of users"

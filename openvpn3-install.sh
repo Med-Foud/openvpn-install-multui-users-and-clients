@@ -217,9 +217,9 @@ if [[ ! -e /etc/openvpn3/server/server.conf ]]; then
 	read -n1 -r -p "Press any key to continue..."
 	# If running inside a container, disable LimitNPROC to prevent conflicts
 	if systemd-detect-virt -cq; then
-		mkdir /etc/systemd/system/openvpn3-server@server.service.d/ 2>/dev/null
+		mkdir /etc/systemd/system/openvpn3-server@server.service3.d/ 2>/dev/null
 		echo "[Service]
-LimitNPROC=infinity" > /etc/systemd/system/openvpn3-server@server.service.d/disable-limitnproc.conf
+LimitNPROC=infinity" > /etc/systemd/system/openvpn3-server@server.service3.d/disable-limitnproc.conf
 	fi
 	if [[ "$os" = "debian" || "$os" = "ubuntu" ]]; then
 		apt-get update
@@ -382,19 +382,19 @@ ExecStart=$iptables_path -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCE
 ExecStop=$iptables_path -t nat -D POSTROUTING -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to $ip
 ExecStop=$iptables_path -D INPUT -p $protocol --dport $port -j ACCEPT
 ExecStop=$iptables_path -D FORWARD -s 10.8.0.0/24 -j ACCEPT
-ExecStop=$iptables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" > /etc/systemd/system/openvpn3-iptables.service
+ExecStop=$iptables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" > /etc/systemd/system/openvpn3-iptables.service3
 		if [[ -n "$ip6" ]]; then
 			echo "ExecStart=$ip6tables_path -t nat -A POSTROUTING -s fddd:1194:1194:1194::/64 ! -d fddd:1194:1194:1194::/64 -j SNAT --to $ip6
 ExecStart=$ip6tables_path -I FORWARD -s fddd:1194:1194:1194::/64 -j ACCEPT
 ExecStart=$ip6tables_path -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 ExecStop=$ip6tables_path -t nat -D POSTROUTING -s fddd:1194:1194:1194::/64 ! -d fddd:1194:1194:1194::/64 -j SNAT --to $ip6
 ExecStop=$ip6tables_path -D FORWARD -s fddd:1194:1194:1194::/64 -j ACCEPT
-ExecStop=$ip6tables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/systemd/system/openvpn3-iptables.service
+ExecStop=$ip6tables_path -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /etc/systemd/system/openvpn3-iptables.service3
 		fi
 		echo "RemainAfterExit=yes
 [Install]
-WantedBy=multi-user.target" >> /etc/systemd/system/openvpn3-iptables.service
-		systemctl enable --now openvpn3-iptables.service
+WantedBy=multi-user.target" >> /etc/systemd/system/openvpn3-iptables.service3
+		systemctl enable --now openvpn3-iptables.service3
 	fi
 	# If SELinux is enabled and a custom port was selected, we need this
 	if sestatus 2>/dev/null | grep "Current mode" | grep -q "enforcing" && [[ "$port" != 1194 ]]; then
@@ -428,7 +428,7 @@ ignore-unknown-option block-outside-dns
 block-outside-dns
 verb 3" > /etc/openvpn3/server/client-common.txt
 	# Enable and start the OpenVPN service
-	systemctl enable --now openvpn3-server@server.service
+	systemctl enable --now openvpn3-server@server.service3
 	# Generates the custom client.ovpn
 	new_client
 	echo
@@ -536,14 +536,14 @@ else
 						firewall-cmd --permanent --direct --remove-rule ipv6 nat POSTROUTING 0 -s fddd:1194:1194:1194::/64 ! -d fddd:1194:1194:1194::/64 -j SNAT --to "$ip6"
 					fi
 				else
-					systemctl disable --now openvpn3-iptables.service
-					rm -f /etc/systemd/system/openvpn3-iptables.service
+					systemctl disable --now openvpn3-iptables.service3
+					rm -f /etc/systemd/system/openvpn3-iptables.service3
 				fi
 				if sestatus 2>/dev/null | grep "Current mode" | grep -q "enforcing" && [[ "$port" != 1194 ]]; then
 					semanage port -d -t openvpn_port_t -p "$protocol" "$port"
 				fi
-				systemctl disable --now openvpn3-server@server.service
-				rm -f /etc/systemd/system/openvpn3-server@server.service.d/disable-limitnproc.conf
+				systemctl disable --now openvpn3-server@server.service3
+				rm -f /etc/systemd/system/openvpn3-server@server.service3.d/disable-limitnproc.conf
 				rm -f /etc/sysctl.d/99-openvpn3-forward.conf
 				if [[ "$os" = "debian" || "$os" = "ubuntu" ]]; then
 					rm -rf /etc/openvpn3/server

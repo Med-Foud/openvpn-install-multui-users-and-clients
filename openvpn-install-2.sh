@@ -99,7 +99,6 @@ new_client () {
 }
 
 if [[ ! -e /etc/openvpn/server/server.conf ]]; then
-if [[ ! -e /etc/openvpn/server/server2.conf ]]; then
 	# Detect some Debian minimal setups where neither wget nor curl are installed
 	if ! hash wget 2>/dev/null && ! hash curl 2>/dev/null; then
 		echo "Wget is required to use this installer."
@@ -333,7 +332,6 @@ verb 3
 crl-verify crl.pem" >> /etc/openvpn/server/server.conf
 	if [[ "$protocol" = "udp" ]]; then
 		echo "explicit-exit-notify" >> /etc/openvpn/server/server.conf
-    
 	fi
 	# Enable net.ipv4.ip_forward for the system
 	echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-openvpn-forward.conf
@@ -374,73 +372,6 @@ crl-verify crl.pem" >> /etc/openvpn/server/server.conf
 			ip6tables_path=$(command -v ip6tables-legacy)
 		fi
 		echo "[Unit]
-
-	# Generate server2.conf
-	echo "local $ip
-port tcp
-proto 443
-dev tun
-ca ca.crt
-cert server.crt
-key server.key
-dh dh.pem
-duplicate-cn
-auth SHA512
-tls-crypt tc.key
-topology subnet
-server 10.8.0.0 255.255.255.0" > /etc/openvpn/server/server2.conf
-	# IPv6
-	if [[ -z "$ip6" ]]; then
-		echo 'push "redirect-gateway def1 bypass-dhcp"' >> /etc/openvpn/server/server2.conf
-	else
-		echo 'server-ipv6 fddd:1194:1194:1194::/64' >> /etc/openvpn/server/server2.conf
-		echo 'push "redirect-gateway def1 ipv6 bypass-dhcp"' >> /etc/openvpn/server/server2.conf
-	fi
-	echo 'ifconfig-pool-persist ipp.txt' >> /etc/openvpn/server/server2.conf
-	# DNS
-	case "$dns" in
-		1|"")
-			# Locate the proper resolv.conf
-			# Needed for systems running systemd-resolved
-			if grep -q '^nameserver 127.0.0.53' "/etc/resolv.conf"; then
-				resolv_conf="/run/systemd/resolve/resolv.conf"
-			else
-				resolv_conf="/etc/resolv.conf"
-			fi
-			# Obtain the resolvers from resolv.conf and use them for OpenVPN
-			grep -v '^#\|^;' "$resolv_conf" | grep '^nameserver' | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | while read line; do
-				echo "push \"dhcp-option DNS $line\"" >> /etc/openvpn/server/server2.conf
-			done
-		;;
-		2)
-			echo 'push "dhcp-option DNS 8.8.8.8"' >> /etc/openvpn/server/server2.conf
-			echo 'push "dhcp-option DNS 8.8.4.4"' >> /etc/openvpn/server/server2.conf
-		;;
-		3)
-			echo 'push "dhcp-option DNS 1.1.1.1"' >> /etc/openvpn/server/server2.conf
-			echo 'push "dhcp-option DNS 1.0.0.1"' >> /etc/openvpn/server/server2.conf
-		;;
-		4)
-			echo 'push "dhcp-option DNS 208.67.222.222"' >> /etc/openvpn/server/server2.conf
-			echo 'push "dhcp-option DNS 208.67.220.220"' >> /etc/openvpn/server/server2.conf
-		;;
-		5)
-			echo 'push "dhcp-option DNS 9.9.9.9"' >> /etc/openvpn/server/server2.conf
-			echo 'push "dhcp-option DNS 149.112.112.112"' >> /etc/openvpn/server/server2.conf
-		;;
-		6)
-			echo 'push "dhcp-option DNS 94.140.14.14"' >> /etc/openvpn/server/server2.conf
-			echo 'push "dhcp-option DNS 94.140.15.15"' >> /etc/openvpn/server/server2.conf
-		;;
-	esac
-	echo "keepalive 10 120
-cipher AES-256-CBC
-user nobody
-group $group_name
-persist-key
-persist-tun
-verb 3
-crl-verify crl.pem" >> /etc/openvpn/server/server2.conf
 Before=network.target
 [Service]
 Type=oneshot

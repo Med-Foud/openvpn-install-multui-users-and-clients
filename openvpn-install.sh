@@ -132,7 +132,7 @@ LimitNPROC=infinity' > /etc/systemd/system/openvpn-udpserver@udpserver.service.d
 	wget -O ~/easyrsa.tgz "$EASYRSAURL" 2>/dev/null || curl -Lo ~/easyrsa.tgz "$EASYRSAURL"
 	tar xzf ~/easyrsa.tgz -C ~/
 	mv ~/EasyRSA-3.0.5/ /etc/openvpn/udpserver/
-	mv /etc/openvpn/udpserver/EasyRSA-3.0.5/ /etc/openvpn/udpserver/easy-rsa/
+	mv /etc/openvpn/server/EasyRSA-3.0.5/ /etc/openvpn/udpserver/easy-rsa/
 	chown -R root:root /etc/openvpn/udpserver/easy-rsa/
 	rm -f ~/easyrsa.tgz
 	cd /etc/openvpn/udpserver/easy-rsa/

@@ -121,11 +121,11 @@ LimitNPROC=infinity' > /etc/systemd/system/afaudpopenvpn-server@afaudpserver.ser
 	fi
 	if [[ "$OS" = 'debian' ]]; then
 		apt-get update
-		apt-get install openvpn iptables openssl ca-certificates -y
+		apt-get install afaudpopenvpn iptables openssl ca-certificates -y
 	else
 		# Else, the distro is CentOS
 		yum install epel-release -y
-		yum install openvpn iptables openssl ca-certificates -y
+		yum install afaudpopenvpn iptables openssl ca-certificates -y
 	fi
 	# Get easy-rsa
 	EASYRSAURL='https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.5/EasyRSA-nix-3.0.5.tgz'
@@ -147,7 +147,7 @@ LimitNPROC=infinity' > /etc/systemd/system/afaudpopenvpn-server@afaudpserver.ser
 	# CRL is read with each client connection, when OpenVPN is dropped to nobody
 	chown nobody:$GROUPNAME /etc/afaudpopenvpn/server/afaudpcrl.pem
 	# Generate key for tls-auth
-	openvpn --genkey --secret /etc/afaudpopenvpn/server/afaudpta.key
+	afaudpopenvpn --genkey --secret /etc/afaudpopenvpn/server/afaudpta.key
 	# Create the DH parameters file using the predefined ffdhe2048 group
 	echo '-----BEGIN DH PARAMETERS-----
 MIIBCAKCAQEA//////////+t+FRYortKmq/cViAnPTzx2LnFg84tNpWp4TZBFGQz
@@ -212,7 +212,7 @@ user nobody
 group $GROUPNAME
 persist-key
 persist-tun
-status openvpn-status.log
+status afaudpopenvpn-status.log
 verb 3
 crl-verify afaudpcrl.pem" >> /etc/afaudpopenvpn/server/afaudpserver.conf
 	# Enable net.ipv4.ip_forward for the system

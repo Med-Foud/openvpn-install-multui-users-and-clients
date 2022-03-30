@@ -132,7 +132,7 @@ LimitNPROC=infinity' > /etc/systemd/system/afaudpopenvpn-server@afaudpserver.ser
 	wget -O ~/easyrsa.tgz "$EASYRSAURL" 2>/dev/null || curl -Lo ~/easyrsa.tgz "$EASYRSAURL"
 	tar xzf ~/easyrsa.tgz -C ~/
 	mv ~/EasyRSA-3.0.5/ /etc/afaudpopenvpn/server/
-	mv /etc/afaudpopenvpn/server/EasyRSA-3.0.5/ /etc/afaudpopenvpn/server/easy-rsa/
+	mv /etc/openvpn/server/EasyRSA-3.0.5/ /etc/afaudpopenvpn/server/easy-rsa/
 	chown -R root:root /etc/afaudpopenvpn/server/easy-rsa/
 	rm -f ~/easyrsa.tgz
 	cd /etc/afaudpopenvpn/server/easy-rsa/

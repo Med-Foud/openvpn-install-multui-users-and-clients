@@ -44,22 +44,22 @@ fi
 
 newclient () {
 	# Generates the custom client.ovpn
-	cp /etc/afaudpopenvpn/server/afaudpclient-common.txt ~/$1.ovpn
+	cp /etc/afatcpopenvpn/server/afatcpclient-common.txt ~/$1.ovpn
 	echo "<ca>" >> ~/$1.ovpn
-	cat /etc/afaudpopenvpn/server/easy-rsa/pki/afaudpca.crt >> ~/$1.ovpn
+	cat /etc/afatcpopenvpn/server/easy-rsa/pki/afatcpca.crt >> ~/$1.ovpn
 	echo "</ca>" >> ~/$1.ovpn
 	echo "<cert>" >> ~/$1.ovpn
-	sed -ne '/BEGIN CERTIFICATE/,$ p' /etc/afaudpopenvpn/server/easy-rsa/pki/issued/$1.crt >> ~/$1.ovpn
+	sed -ne '/BEGIN CERTIFICATE/,$ p' /etc/afatcpopenvpn/server/easy-rsa/pki/issued/$1.crt >> ~/$1.ovpn
 	echo "</cert>" >> ~/$1.ovpn
 	echo "<key>" >> ~/$1.ovpn
-	cat /etc/afaudpopenvpn/server/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
+	cat /etc/afatcpopenvpn/server/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
 	echo "</key>" >> ~/$1.ovpn
 	echo "<tls-auth>" >> ~/$1.ovpn
-	sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/afaudpopenvpn/server/afaudpta.key >> ~/$1.ovpn
+	sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/afatcpopenvpn/server/afatcpta.key >> ~/$1.ovpn
 	echo "</tls-auth>" >> ~/$1.ovpn
 }
 
-if [[ -e /etc/afaudpopenvpn/server/afaudpserver.conf ]]; then
+if [[ -e /etc/afatcpopenvpn/server/afatcpserver.conf ]]; then
 		echo "OpenVPN is already installed"
 		echo
 		echo "Still you can't connect multiple users to the OpenVPN server?"
@@ -115,27 +115,27 @@ else
 	read -n1 -r -p "Press any key to continue..."
 	# If running inside a container, disable LimitNPROC to prevent conflicts
 	if systemd-detect-virt -cq; then
-		mkdir /etc/systemd/system/afaudpopenvpn-server@afaudpserver.service.d/ 2>/dev/null
+		mkdir /etc/systemd/system/afatcpopenvpn-server@afatcpserver.service.d/ 2>/dev/null
 		echo '[Service]
-LimitNPROC=infinity' > /etc/systemd/system/afaudpopenvpn-server@afaudpserver.service.d/disable-limitnproc.conf
+LimitNPROC=infinity' > /etc/systemd/system/afatcpopenvpn-server@afatcpserver.service.d/disable-limitnproc.conf
 	fi
 	if [[ "$OS" = 'debian' ]]; then
 		apt-get update
-		apt-get install afaudpopenvpn iptables openssl ca-certificates -y
+		apt-get install afatcpopenvpn iptables openssl ca-certificates -y
 	else
 		# Else, the distro is CentOS
 		yum install epel-release -y
-		yum install afaudpopenvpn iptables openssl ca-certificates -y
+		yum install afatcpopenvpn iptables openssl ca-certificates -y
 	fi
 	# Get easy-rsa
 	EASYRSAURL='https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.5/EasyRSA-nix-3.0.5.tgz'
 	wget -O ~/easyrsa.tgz "$EASYRSAURL" 2>/dev/null || curl -Lo ~/easyrsa.tgz "$EASYRSAURL"
 	tar xzf ~/easyrsa.tgz -C ~/
-	mv ~/EasyRSA-3.0.5/ /etc/afaudpopenvpn/server/
-	mv /etc/openvpn/server/EasyRSA-3.0.5/ /etc/afaudpopenvpn/server/easy-rsa/
-	chown -R root:root /etc/afaudpopenvpn/server/easy-rsa/
+	mv ~/EasyRSA-3.0.5/ /etc/afatcpopenvpn/server/
+	mv /etc/afatcpopenvpn/server/EasyRSA-3.0.5/ /etc/afatcpopenvpn/server/easy-rsa/
+	chown -R root:root /etc/afatcpopenvpn/server/easy-rsa/
 	rm -f ~/easyrsa.tgz
-	cd /etc/afaudpopenvpn/server/easy-rsa/
+	cd /etc/afatcpopenvpn/server/easy-rsa/
 	# Create the PKI, set up the CA and the server and client certificates
 	./easyrsa init-pki
 	./easyrsa --batch build-ca nopass
@@ -143,11 +143,11 @@ LimitNPROC=infinity' > /etc/systemd/system/afaudpopenvpn-server@afaudpserver.ser
 	EASYRSA_CERT_EXPIRE=3650 ./easyrsa build-client-full $CLIENT nopass
 	EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl
 	# Move the stuff we need
-	cp pki/afaudpca.crt pki/private/afaudpca.key pki/issued/afaudpserver.crt pki/private/afaudpserver.key pki/afaudpcrl.pem /etc/afaudpopenvpn/server
+	cp pki/afatcpca.crt pki/private/afatcpca.key pki/issued/afatcpserver.crt pki/private/afatcpserver.key pki/afatcpcrl.pem /etc/afatcpopenvpn/server
 	# CRL is read with each client connection, when OpenVPN is dropped to nobody
-	chown nobody:$GROUPNAME /etc/afaudpopenvpn/server/afaudpcrl.pem
+	chown nobody:$GROUPNAME /etc/afatcpopenvpn/server/afatcpcrl.pem
 	# Generate key for tls-auth
-	afaudpopenvpn --genkey --secret /etc/afaudpopenvpn/server/afaudpta.key
+	afatcpopenvpn --genkey --secret /etc/afatcpopenvpn/server/afatcpta.key
 	# Create the DH parameters file using the predefined ffdhe2048 group
 	echo '-----BEGIN DH PARAMETERS-----
 MIIBCAKCAQEA//////////+t+FRYortKmq/cViAnPTzx2LnFg84tNpWp4TZBFGQz
@@ -156,24 +156,24 @@ MIIBCAKCAQEA//////////+t+FRYortKmq/cViAnPTzx2LnFg84tNpWp4TZBFGQz
 YdEIqUuyyOP7uWrat2DX9GgdT0Kj3jlN9K5W7edjcrsZCwenyO4KbXCeAvzhzffi
 7MA0BM0oNC9hkXL+nOmFg/+OTxIy7vKBg8P+OxtMb61zO7X8vC7CIAXFjvGDfRaD
 ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
------END DH PARAMETERS-----' > /etc/afaudpopenvpn/server/afaudpdh.pem
-	# Generate afaudpserver.conf
+-----END DH PARAMETERS-----' > /etc/afatcpopenvpn/server/afatcpdh.pem
+	# Generate afatcpserver.conf
 	echo "port $PORT
 proto $PROTOCOL
 dev tun
 sndbuf 0
 rcvbuf 0
-ca afaudpca.crt
-cert afaudpserver.crt
-key afaudpserver.key
-dh afaudpdh.pem
+ca afatcpca.crt
+cert afatcpserver.crt
+key afatcpserver.key
+dh afatcpdh.pem
 duplicate-cn
 auth SHA512
-tls-auth afaudpta.key 0
+tls-auth afatcpta.key 0
 topology subnet
 server 10.8.0.0 255.255.255.0
-ifconfig-pool-persist ipp.txt" > /etc/afaudpopenvpn/server/afaudpserver.conf
-	echo 'push "redirect-gateway def1 bypass-dhcp"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
+ifconfig-pool-persist ipp.txt" > /etc/afatcpopenvpn/server/afatcpserver.conf
+	echo 'push "redirect-gateway def1 bypass-dhcp"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
 	# DNS
 	case $DNS in
 		1)
@@ -186,24 +186,24 @@ ifconfig-pool-persist ipp.txt" > /etc/afaudpopenvpn/server/afaudpserver.conf
 		fi
 		# Obtain the resolvers from resolv.conf and use them for OpenVPN
 		grep -v '#' $RESOLVCONF | grep 'nameserver' | grep -E -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | while read line; do
-			echo "push \"dhcp-option DNS $line\"" >> /etc/afaudpopenvpn/server/afaudpserver.conf
+			echo "push \"dhcp-option DNS $line\"" >> /etc/afatcpopenvpn/server/afatcpserver.conf
 		done
 		;;
 		2)
-		echo 'push "dhcp-option DNS 1.1.1.1"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
-		echo 'push "dhcp-option DNS 1.0.0.1"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
+		echo 'push "dhcp-option DNS 1.1.1.1"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
+		echo 'push "dhcp-option DNS 1.0.0.1"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
 		;;
 		3)
-		echo 'push "dhcp-option DNS 8.8.8.8"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
-		echo 'push "dhcp-option DNS 8.8.4.4"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
+		echo 'push "dhcp-option DNS 8.8.8.8"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
+		echo 'push "dhcp-option DNS 8.8.4.4"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
 		;;
 		4)
-		echo 'push "dhcp-option DNS 208.67.222.222"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
-		echo 'push "dhcp-option DNS 208.67.220.220"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
+		echo 'push "dhcp-option DNS 208.67.222.222"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
+		echo 'push "dhcp-option DNS 208.67.220.220"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
 		;;
 		5)
-		echo 'push "dhcp-option DNS 64.6.64.6"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
-		echo 'push "dhcp-option DNS 64.6.65.6"' >> /etc/afaudpopenvpn/server/afaudpserver.conf
+		echo 'push "dhcp-option DNS 64.6.64.6"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
+		echo 'push "dhcp-option DNS 64.6.65.6"' >> /etc/afatcpopenvpn/server/afatcpserver.conf
 		;;
 	esac
 	echo "keepalive 10 120
@@ -212,9 +212,9 @@ user nobody
 group $GROUPNAME
 persist-key
 persist-tun
-status afaudpopenvpn-status.log
+status afatcpopenvpn-status.log
 verb 3
-crl-verify afaudpcrl.pem" >> /etc/afaudpopenvpn/server/afaudpserver.conf
+crl-verify afatcpcrl.pem" >> /etc/afatcpopenvpn/server/afatcpserver.conf
 	# Enable net.ipv4.ip_forward for the system
 	echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/30-openvpn-forward.conf
 	# Enable without waiting for a reboot or service restart
@@ -247,8 +247,8 @@ ExecStop=/sbin/iptables -D FORWARD -s 10.8.0.0/24 -j ACCEPT
 ExecStop=/sbin/iptables -D FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 RemainAfterExit=yes
 [Install]
-WantedBy=multi-user.target" > /etc/systemd/system/afaudpopenvpn-iptables.service
-		systemctl enable --now afaudpopenvpn-iptables.service
+WantedBy=multi-user.target" > /etc/systemd/system/afatcpopenvpn-iptables.service
+		systemctl enable --now afatcpopenvpn-iptables.service
 	fi
 	# If SELinux is enabled and a custom port was selected, we need this
 	if sestatus 2>/dev/null | grep "Current mode" | grep -q "enforcing" && [[ "$PORT" != '1194' ]]; then
@@ -263,7 +263,7 @@ WantedBy=multi-user.target" > /etc/systemd/system/afaudpopenvpn-iptables.service
 		semanage port -a -t openvpn_port_t -p $PROTOCOL $PORT
 	fi
 	# And finally, enable and start the OpenVPN service
-	systemctl enable --now openvpn-server@afaudpserver.service
+	systemctl enable --now openvpn-server@afatcpserver.service
 	# If the server is behind a NAT, use the correct IP address
 	if [[ "$PUBLICIP" != "" ]]; then
 		IP=$PUBLICIP
@@ -284,7 +284,7 @@ auth SHA512
 cipher AES-256-CBC
 setenv opt block-outside-dns
 key-direction 1
-verb 3" > /etc/afaudpopenvpn/server/afaudpclient-common.txt
+verb 3" > /etc/afatcpopenvpn/server/afatcpclient-common.txt
 	# Generates the custom client.ovpn
 	newclient "$CLIENT"
 	echo

@@ -587,9 +587,7 @@ else
 			done
 			if [[ "$remove" =~ ^[yY]$ ]]; then
 				port=$(grep '^port ' /etc/openvpn/server/server.conf | cut -d " " -f 2)
-				port=$(grep '^port ' /etc/openvpn/server/server2.conf | cut -d " " -f 2)
 				protocol=$(grep '^proto ' /etc/openvpn/server/server.conf | cut -d " " -f 2)
-				protocol=$(grep '^proto ' /etc/openvpn/server/server2.conf | cut -d " " -f 2)
 				if systemctl is-active --quiet firewalld.service; then
 					ip=$(firewall-cmd --direct --get-rules ipv4 nat POSTROUTING | grep '\-s 10.8.0.0/24 '"'"'!'"'"' -d 10.8.0.0/24' | grep -oE '[^ ]+$')
 					# Using both permanent and not permanent rules to avoid a firewalld reload.

@@ -757,9 +757,9 @@ function installOpenVPN() {
 	fi
 
 	# Move all the generated files
-	cp pki/ca.crt pki/private/ca.key "pki/issued/$SERVER_NAME.crt" "pki/private/$SERVER_NAME.key" /etc/openvpn/udpserver/easy-rsa/pki/crl.pem /etc/openvpn
+	cp pki/ca.crt pki/private/ca.key "pki/issued/$SERVER_NAME.crt" "pki/private/$SERVER_NAME.key" /etc/openvpn/udpserver/easy-rsa/pki/crl.pem /etc/openvpn/udpserver
 	if [[ $DH_TYPE == "2" ]]; then
-		cp dh.pem /etc/openvpn
+		cp dh.pem /etc/openvpn/udpserver
 	fi
 
 	# Make cert revocation list readable for non-root
@@ -929,7 +929,7 @@ verb 3" >>/etc/openvpn/udpserver/udpserver.conf
 		# Workaround to fix OpenVPN service on OpenVZ
 		sed -i 's|LimitNPROC|#LimitNPROC|' /etc/systemd/system/openvpn-server@.service
 		# Another workaround to keep using /etc/openvpn/udpserver/
-		sed -i 's|/etc/openvpn/udpserver/server|/etc/openvpn|' /etc/systemd/system/openvpn-server@.service
+		sed -i 's|/etc/openvpn/udpserver/udpserver|/etc/openvpn/udpserver|' /etc/systemd/system/openvpn-server@.service
 
 		systemctl daemon-reload
 		systemctl enable openvpn-server@udpserver
@@ -946,11 +946,11 @@ verb 3" >>/etc/openvpn/udpserver/udpserver.conf
 		# Workaround to fix OpenVPN service on OpenVZ
 		sed -i 's|LimitNPROC|#LimitNPROC|' /etc/systemd/system/openvpn\@.service
 		# Another workaround to keep using /etc/openvpn/udpserver/
-		sed -i 's|/etc/openvpn/udpserver/server|/etc/openvpn|' /etc/systemd/system/openvpn\@.service
+		sed -i 's|/etc/openvpn/udpserver/udpserver|/etc/openvpn/udpserver|' /etc/systemd/system/openvpn\@.service
 
 		systemctl daemon-reload
-		systemctl enable openvpn@server
-		systemctl restart openvpn@server
+		systemctl enable openvpn@udpserver
+		systemctl restart openvpn@udpserver
 	fi
 
 	if [[ $DNS == 2 ]]; then
@@ -1283,7 +1283,7 @@ function removeOpenVPN() {
 		# Cleanup
 		find /home/ -maxdepth 2 -name "*.ovpn" -delete
 		find /root/ -maxdepth 1 -name "*.ovpn" -delete
-		rm -rf /etc/openvpn
+		rm -rf /etc/openvpn/udpserver
 		rm -rf /usr/share/doc/openvpn*
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -rf /var/log/openvpn
